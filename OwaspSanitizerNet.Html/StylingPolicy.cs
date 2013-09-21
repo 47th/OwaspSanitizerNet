@@ -29,7 +29,7 @@
 using System;
 using System.Text;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
 /**
  * An HTML sanitizer policy that tries to preserve simple CSS by white-listing

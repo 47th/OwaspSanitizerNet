@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
     public class AssertionException : Exception
     {

@@ -31,7 +31,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
     /**
      * Wraps an HTML stream event receiver to fill in missing close tags.

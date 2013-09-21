@@ -29,7 +29,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
     /**
      * From section 8.1.2.6 of http://www.whatwg.org/specs/web-apps/current-work/

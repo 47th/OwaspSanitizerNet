@@ -29,7 +29,7 @@
 using System;
 using System.Text;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
 internal sealed class CssGrammar {
 

@@ -31,7 +31,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
 /**
  * Given a string of CSS, produces a string of normalized CSS with certain

@@ -31,7 +31,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
     /**
      * A trie used to separate punctuation tokens in a run of non-whitespace

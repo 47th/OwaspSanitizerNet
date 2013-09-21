@@ -29,7 +29,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
     /**
      * Utilities for decoding HTML entities, e.g., {@code &amp;}.

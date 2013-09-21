@@ -28,7 +28,7 @@
 
 using System;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
     /**
      * Indicates that a program element is in the trusted computing base --

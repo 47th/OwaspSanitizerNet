@@ -29,7 +29,7 @@
 using System;
 using System.ComponentModel;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
     /**
      * A policy that can be applied to an HTML attribute to decide whether or not to

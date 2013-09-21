@@ -30,7 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
 /** Describes the kinds of tokens a CSS property's value can safely contain. */
 [TCB]

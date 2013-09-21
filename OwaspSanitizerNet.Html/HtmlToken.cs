@@ -29,7 +29,7 @@
 using System;
 using System.ComponentModel;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
     [ImmutableObject(true)]
     internal sealed class HtmlToken

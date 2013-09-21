@@ -29,7 +29,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace OwaspSanitizerNet
+namespace OwaspSanitizerNet.Html
 {
     /**
      * A light-weight SAX-like listener for HTML.
