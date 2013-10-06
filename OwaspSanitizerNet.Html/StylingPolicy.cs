@@ -27,191 +27,248 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace OwaspSanitizerNet.Html
 {
-/**
- * An HTML sanitizer policy that tries to preserve simple CSS by white-listing
- * property values and splitting combo properties into multiple more specific
- * ones to reduce the attack-surface.
- */
-[TCB]
-internal sealed class StylingPolicy : IAttributePolicy {
+    /**
+     * An HTML sanitizer policy that tries to preserve simple CSS by white-listing
+     * property values and splitting combo properties into multiple more specific
+     * ones to reduce the attack-surface.
+     */
+    [TCB]
+    internal sealed class StylingPolicy : IAttributePolicy
+    {
+        private readonly CssSchema _cssSchema;
 
-  private readonly CssSchema cssSchema;
-
-  StylingPolicy(CssSchema cssSchema) {
-    this.cssSchema = cssSchema;
-  }
-
-  public String apply(
-      String elementName, String attributeName, String value) {
-    return value != null ? sanitizeCssProperties(value) : null;
-  }
-
-  /**
-   * Lossy filtering of CSS properties that allows textual styling that affects
-   * layout, but does not allow breaking out of a clipping region, absolute
-   * positioning, image loading, tab index changes, or code execution.
-   *
-   * @return A sanitized version of the input.
-   */
-  //@VisibleForTesting
-  internal String sanitizeCssProperties(String style) {
-    StringBuilder sanitizedCss = new StringBuilder();
-    CssGrammar.parsePropertyGroup(style, new CssGrammar.PropertyHandler() {
-      CssSchema.Property cssProperty = CssSchema.DISALLOWED;
-      List<CssSchema.Property> cssProperties = null;
-      int propertyStart = 0;
-      bool hasTokens;
-      bool inQuotedIdents;
-
-      private void emitToken(String token) {
-        closeQuotedIdents();
-        if (hasTokens) { sanitizedCss.append(' '); }
-        sanitizedCss.Append(token);
-        hasTokens = true;
-      }
-
-      private void closeQuotedIdents() {
-        if (inQuotedIdents) {
-          sanitizedCss.append('\'');
-          inQuotedIdents = false;
+        StylingPolicy(CssSchema cssSchema)
+        {
+            _cssSchema = cssSchema;
         }
-      }
 
-      public void url(String token) {
-        closeQuotedIdents();
-        //if ((schema.bits & CssSchema.BIT_URL) != 0) {
-        // TODO: sanitize the URL.
-        //}
-      }
-
-      public void startProperty(String propertyName) {
-        if (cssProperties != null) { cssProperties.clear(); }
-        cssProperty = cssSchema.forKey(propertyName);
-        hasTokens = false;
-        propertyStart = sanitizedCss.length();
-        if (sanitizedCss.length() != 0) {
-          sanitizedCss.append(';');
+        public String Apply(
+            String elementName, String attributeName, String value)
+        {
+            return value != null ? SanitizeCssProperties(value) : null;
         }
-        sanitizedCss.append(propertyName).append(':');
-      }
 
-      public void startFunction(String token) {
-        closeQuotedIdents();
-        if (cssProperties == null) { cssProperties = Lists.newArrayList(); }
-        cssProperties.add(cssProperty);
-        token = Strings.toLowerCase(token);
-        String key = cssProperty.fnKeys.get(token);
-        cssProperty = key != null
-            ? cssSchema.forKey(key)
-            : CssSchema.DISALLOWED;
-        if (cssProperty != CssSchema.DISALLOWED) {
-          emitToken(token);
+        /**
+         * Lossy filtering of CSS properties that allows textual styling that affects
+         * layout, but does not allow breaking out of a clipping region, absolute
+         * positioning, image loading, tab index changes, or code execution.
+         *
+         * @return A sanitized version of the input.
+         */
+        //@VisibleForTesting
+        internal String SanitizeCssProperties(String style)
+        {
+            var sanitizedCss = new StringBuilder();
+            CssGrammar.ParsePropertyGroup(style, new CssSanitizer(_cssSchema, sanitizedCss));
+            return sanitizedCss.Length == 0 ? null : sanitizedCss.ToString();
         }
-      }
 
-      public void quotedString(String token) {
-        closeQuotedIdents();
-        // The contents of a quoted string could be treated as
-        // 1. a run of space-separated words, as in a font family name,
-        // 2. as a URL,
-        // 3. as plain text content as in a list-item bullet,
-        // 4. or it could be ambiguous as when multiple bits are set.
-        int meaning =
-            cssProperty.bits
-            & (CssSchema.BIT_UNRESERVED_WORD | CssSchema.BIT_URL);
-        if ((meaning & (meaning - 1)) == 0) {  // meaning is unambiguous
-          if (meaning == CssSchema.BIT_UNRESERVED_WORD
-              && token.length() > 2
-              && isAlphanumericOrSpace(token, 1, token.length() - 1)) {
-            emitToken(Strings.toLowerCase(token));
-          } else if (meaning == CssSchema.BIT_URL) {
-            // convert to a URL token and hand-off to the appropriate method
-            // url("url(" + token + ")");  // TODO: %-encode properly
-          }
-        }
-      }
+        private class CssSanitizer : CssGrammar.IPropertyHandler
+        {
+            private readonly CssSchema _cssSchema;
+            private readonly StringBuilder _sanitizedCss;
+            CssSchema.Property _cssProperty = CssSchema.Disallowed;
+            List<CssSchema.Property> _cssProperties;
+            private int _propertyStart;
+            private bool _hasTokens;
+            private bool _inQuotedIdents;
 
-      public void quantity(String token) {
-        int test = token.startsWith("-")
-            ? CssSchema.BIT_NEGATIVE : CssSchema.BIT_QUANTITY;
-        if ((cssProperty.bits & test) != 0
-            // font-weight uses 100, 200, 300, etc.
-            || cssProperty.literals.contains(token)) {
-          emitToken(token);
-        }
-      }
+            public CssSanitizer(CssSchema cssSchema, StringBuilder sanitizedCss)
+            {
+                _cssSchema = cssSchema;
+                _sanitizedCss = sanitizedCss;
+            }
 
-      public void punctuation(String token) {
-        closeQuotedIdents();
-        if (cssProperty.literals.contains(token)) {
-          emitToken(token);
-        }
-      }
+            private void EmitToken(String token)
+            {
+                CloseQuotedIdents();
+                if (_hasTokens) { _sanitizedCss.Append(' '); }
+                _sanitizedCss.Append(token);
+                _hasTokens = true;
+            }
 
-      private static final int IDENT_TO_STRING =
-          CssSchema.BIT_UNRESERVED_WORD | CssSchema.BIT_STRING;
-      public void identifier(String token) {
-        token = Strings.toLowerCase(token);
-        if (cssProperty.literals.contains(token)) {
-          emitToken(token);
-        } else if ((cssProperty.bits & IDENT_TO_STRING) == IDENT_TO_STRING) {
-          if (!inQuotedIdents) {
-            inQuotedIdents = true;
-            if (hasTokens) { sanitizedCss.append(' '); }
-            sanitizedCss.append('\'');
-            hasTokens = true;
-          } else {
-            sanitizedCss.append(' ');
-          }
-          sanitizedCss.append(Strings.toLowerCase(token));
-        }
-      }
+            private void CloseQuotedIdents()
+            {
+                if (_inQuotedIdents)
+                {
+                    _sanitizedCss.Append('\'');
+                    _inQuotedIdents = false;
+                }
+            }
 
-      public void hash(String token) {
-        closeQuotedIdents();
-        if ((cssProperty.bits & CssSchema.BIT_HASH_VALUE) != 0) {
-          emitToken(Strings.toLowerCase(token));
-        }
-      }
+            public void Url(String token)
+            {
+                CloseQuotedIdents();
+                //if ((schema.bits & CssSchema.BIT_URL) != 0) {
+                // TODO: sanitize the URL.
+                //}
+            }
 
-      public void endProperty() {
-        if (!hasTokens) {
-          sanitizedCss.setLength(propertyStart);
-        } else {
-          closeQuotedIdents();
-        }
-      }
+            public void StartProperty(String propertyName)
+            {
+                if (_cssProperties != null) { _cssProperties.Clear(); }
+                _cssProperty = _cssSchema.ForKey(propertyName);
+                _hasTokens = false;
+                _propertyStart = _sanitizedCss.Length;
+                if (_sanitizedCss.Length != 0)
+                {
+                    _sanitizedCss.Append(';');
+                }
+                _sanitizedCss.Append(propertyName).Append(':');
+            }
 
-      public void endFunction(String token) {
-        if (cssProperty != CssSchema.DISALLOWED) { emitToken(")"); }
-        cssProperty = cssProperties.remove(cssProperties.size() - 1);
-      }
-    });
-    return sanitizedCss.length() == 0 ? null : sanitizedCss.toString();
-  }
+            public void StartFunction(String token)
+            {
+                CloseQuotedIdents();
+                if (_cssProperties == null) { _cssProperties = new List<CssSchema.Property>(); }
+                _cssProperties.Add(_cssProperty);
+                token = token.ToLowerInvariant();
+                String key;
+                _cssProperty = CssSchema.Disallowed;
+                if (_cssProperty.FnKeys.TryGetValue(token, out key))
+                {
+                    _cssProperty = _cssSchema.ForKey(key);
+                }
+                if (_cssProperty != CssSchema.Disallowed)
+                {
+                    EmitToken(token);
+                }
+            }
 
-  private static boolean isAlphanumericOrSpace(
-      String token, int start, int end) {
-    for (int i = start; i < end; ++i) {
-      char ch = token.charAt(i);
-      if (ch <= 0x20) {
-        if (ch != '\t' && ch != ' ') {
-          return false;
+            public void QuotedString(String token)
+            {
+                CloseQuotedIdents();
+                // The contents of a quoted string could be treated as
+                // 1. a run of space-separated words, as in a font family name,
+                // 2. as a URL,
+                // 3. as plain text content as in a list-item bullet,
+                // 4. or it could be ambiguous as when multiple bits are set.
+                int meaning =
+                    _cssProperty.Bits
+                    & (CssSchema.BitUnreservedWord | CssSchema.BitUrl);
+                if ((meaning & (meaning - 1)) == 0)
+                {  // meaning is unambiguous
+                    if (meaning == CssSchema.BitUnreservedWord
+                        && token.Length > 2
+                        && IsAlphanumericOrSpace(token, 1, token.Length - 1))
+                    {
+                        EmitToken(token.ToLowerInvariant());
+                    }
+                    else if (meaning == CssSchema.BitUrl)
+                    {
+                        // convert to a URL token and hand-off to the appropriate method
+                        // url("url(" + token + ")");  // TODO: %-encode properly
+                    }
+                }
+            }
+
+            private static bool IsAlphanumericOrSpace(
+                String token, int start, int end)
+            {
+                for (int i = start; i < end; ++i)
+                {
+                    char ch = token[i];
+                    if (ch <= 0x20)
+                    {
+                        if (ch != '\t' && ch != ' ')
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        int chLower = ch | 32;
+                        if (!(('0' <= chLower && chLower <= '9')
+                              || ('a' <= chLower && chLower <= 'z')))
+                        {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+
+            public void Quantity(String token)
+            {
+                int test = token.StartsWith("-")
+                    ? CssSchema.BitNegative : CssSchema.BitQuantity;
+                if ((_cssProperty.Bits & test) != 0
+                    // font-weight uses 100, 200, 300, etc.
+                    || _cssProperty.Literals.Contains(token))
+                {
+                    EmitToken(token);
+                }
+            }
+
+            public void Punctuation(String token)
+            {
+                CloseQuotedIdents();
+                if (_cssProperty.Literals.Contains(token))
+                {
+                    EmitToken(token);
+                }
+            }
+
+            private const int IdentToString = CssSchema.BitUnreservedWord | CssSchema.BitString;
+
+            public void Identifier(String token)
+            {
+                token = token.ToLowerInvariant();
+                if (_cssProperty.Literals.Contains(token))
+                {
+                    EmitToken(token);
+                }
+                else if ((_cssProperty.Bits & IdentToString) == IdentToString)
+                {
+                    if (!_inQuotedIdents)
+                    {
+                        _inQuotedIdents = true;
+                        if (_hasTokens) { _sanitizedCss.Append(' '); }
+                        _sanitizedCss.Append('\'');
+                        _hasTokens = true;
+                    }
+                    else
+                    {
+                        _sanitizedCss.Append(' ');
+                    }
+                    _sanitizedCss.Append(token.ToLowerInvariant());
+                }
+            }
+
+            public void Hash(String token)
+            {
+                CloseQuotedIdents();
+                if ((_cssProperty.Bits & CssSchema.BitHashValue) != 0)
+                {
+                    EmitToken(token.ToLowerInvariant());
+                }
+            }
+
+            public void EndProperty()
+            {
+                if (!_hasTokens)
+                {
+                    _sanitizedCss.Length = _propertyStart;
+                }
+                else
+                {
+                    CloseQuotedIdents();
+                }
+            }
+
+            public void EndFunction(String token)
+            {
+                if (_cssProperty != CssSchema.Disallowed) { EmitToken(")"); }
+                _cssProperty = _cssProperties[_cssProperties.Count - 1];
+                _cssProperties.RemoveAt(_cssProperties.Count - 1);
+            }
         }
-      } else {
-        int chLower = ch | 32;
-        if (!(('0' <= chLower && chLower <= '9')
-              || ('a' <= chLower && chLower <= 'z'))) {
-          return false;
-        }
-      }
     }
-    return true;
-  }
-}
 
 }

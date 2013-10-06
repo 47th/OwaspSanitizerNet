@@ -135,8 +135,7 @@ namespace OwaspSanitizerNet.Html
                 }
                 sb[k++] = ch;
             }
-            while (sb.Length < k)
-                sb.Append('\u0000');
+            sb.Length = k;
         }
 
         /**

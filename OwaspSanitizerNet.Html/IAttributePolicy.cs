@@ -51,30 +51,29 @@ namespace OwaspSanitizerNet.Html
          * @return {@code null} to disallow the attribute or the adjusted value if
          *     allowed.
          */
-        String apply(
-            String elementName, String attributeName, String value);
+        String Apply(String elementName, String attributeName, String value);
     }
 
     internal static class AttributePolicy
     {
-        public static IAttributePolicy IDENTITY_ATTRIBUTE_POLICY
+        public static IAttributePolicy IdentityAttributePolicy
             = new IdentityAttributePolicyImpl();
 
         private class IdentityAttributePolicyImpl : IAttributePolicy
         {
-            public String apply(
+            public String Apply(
                 String elementName, String attributeName, String value)
             {
                 return value;
             }
         }
 
-        public static IAttributePolicy REJECT_ALL_ATTRIBUTE_POLICY
+        public static IAttributePolicy RejectAllAttributePolicy
             = new RejectAllAttributePolicyImpl();
 
         private class RejectAllAttributePolicyImpl : IAttributePolicy
         {
-            public String apply(
+            public String Apply(
                 String elementName, String attributeName, String value)
             {
                 return null;
@@ -89,16 +88,16 @@ namespace OwaspSanitizerNet.Html
              * An attribute policy equivalent to applying all the given policies in
              * order, failing early if any of them fails.
              */
-            public static IAttributePolicy join(params IAttributePolicy[] policies)
+            public static IAttributePolicy Join(params IAttributePolicy[] policies)
             {
 
                 var pu = new PolicyJoiner();
                 foreach (IAttributePolicy policy in policies)
                 {
                     if (policy == null) { continue; }
-                    pu.join(policy);
+                    pu.Join(policy);
                 }
-                return pu.Result ?? IDENTITY_ATTRIBUTE_POLICY;
+                return pu.Result ?? IdentityAttributePolicy;
             }
 
             private class PolicyJoiner
@@ -106,28 +105,28 @@ namespace OwaspSanitizerNet.Html
                 IAttributePolicy _last;
                 IAttributePolicy _result;
 
-                internal void join(IAttributePolicy p)
+                internal void Join(IAttributePolicy p)
                 {
-                    if (REJECT_ALL_ATTRIBUTE_POLICY.Equals(p))
+                    if (RejectAllAttributePolicy.Equals(p))
                     {
                         _result = p;
                     }
-                    else if (!REJECT_ALL_ATTRIBUTE_POLICY.Equals(_result))
+                    else if (!RejectAllAttributePolicy.Equals(_result))
                     {
                         var joinedAttributePolicy = p as JoinedAttributePolicy;
                         if (joinedAttributePolicy != null)
                         {
-                            join(joinedAttributePolicy.First);
-                            join(joinedAttributePolicy.Second);
+                            Join(joinedAttributePolicy.First);
+                            Join(joinedAttributePolicy.Second);
                         }
                         else if (p != _last)
                         {
                             _last = p;
-                            if (_result == null || IDENTITY_ATTRIBUTE_POLICY.Equals(_result))
+                            if (_result == null || IdentityAttributePolicy.Equals(_result))
                             {
                                 _result = p;
                             }
-                            else if (!IDENTITY_ATTRIBUTE_POLICY.Equals(p))
+                            else if (!IdentityAttributePolicy.Equals(p))
                             {
                                 _result = new JoinedAttributePolicy(_result, p);
                             }
@@ -154,12 +153,12 @@ namespace OwaspSanitizerNet.Html
             Second = second;
         }
 
-        public String apply(
+        public String Apply(
             String elementName, String attributeName, String value)
         {
-            value = First.apply(elementName, attributeName, value);
+            value = First.Apply(elementName, attributeName, value);
             return value != null
-                ? Second.apply(elementName, attributeName, value) : null;
+                ? Second.Apply(elementName, attributeName, value) : null;
         }
     }
 
