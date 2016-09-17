@@ -11,19 +11,9 @@ fi
 
 dotnet restore
 
-# Ideally we would use the 'dotnet test' command to test netcoreapp and net451 so restrict for now 
-# but this currently doesn't work due to https://github.com/dotnet/cli/issues/3073 so restrict to netcoreapp
-
 dotnet test ./test/OwaspSanitizerNet.Html.Tests -c Release -f netcoreapp1.0
-
-# Instead, run directly with mono for the full .net version 
-dotnet build ./test/OwaspSanitizerNet.Html.Tests -c Release -f net451
-
-mono \  
-./test/OwaspSanitizerNet.Html.Tests/bin/Release/net451/*/dotnet-test-xunit.exe \
-./test/OwaspSanitizerNet.Html.Tests/bin/Release/net451/*/OwaspSanitizerNet.Html.Tests.dll
 
 revision=${TRAVIS_JOB_ID:=1}  
 revision=$(printf "%04d" $revision) 
 
-dotnet pack ./src/OwaspSanitizerNet.Html -c Release -o ./artifacts --version-suffix=$revision 
+dotnet pack ./src/OwaspSanitizerNet.Html -c Release -o ./artifacts --version-suffix=ci-$revision 
