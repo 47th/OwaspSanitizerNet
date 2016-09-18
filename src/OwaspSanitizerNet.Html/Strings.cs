@@ -79,10 +79,11 @@ namespace OwaspSanitizerNet.Html
                 char c = a[i], d = b[i];
                 if (c != d)
                 {
-                    if (c <= 'z' && c >= 'A') {
-                    if (c <= 'Z') { c |= (char)0x20; }
-                    if (d <= 'Z' && d >= 'A') { d |= (char)0x20; }
-                    if (c == d) { continue; }
+                    if (c <= 'z' && c >= 'A')
+                    {
+                        if (c <= 'Z') { c |= (char)0x20; }
+                        if (d <= 'Z' && d >= 'A') { d |= (char)0x20; }
+                        if (c == d) { continue; }
                     }
                     return false;
                 }
@@ -98,10 +99,11 @@ namespace OwaspSanitizerNet.Html
                 char c = a[aoffset + i], d = b[boffset + i];
                 if (c != d)
                 {
-                    if (c <= 'z' && c >= 'A') {
-                    if (c <= 'Z') { c |= (char)0x20; }
-                    if (d <= 'Z' && d >= 'A') { d |= (char)0x20; }
-                    if (c == d) { continue; }
+                    if (c <= 'z' && c >= 'A')
+                    {
+                        if (c <= 'Z') { c |= (char)0x20; }
+                        if (d <= 'Z' && d >= 'A') { d |= (char)0x20; }
+                        if (c == d) { continue; }
                     }
                     return false;
                 }
