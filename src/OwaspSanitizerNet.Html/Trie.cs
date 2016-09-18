@@ -42,6 +42,9 @@ namespace OwaspSanitizerNet.Html
     */
     internal sealed class Trie
     {
+        private static readonly char[] ZeroChars = new char[0];
+        private static readonly Trie[] ZeroTries = new Trie[0];
+
         private readonly char[] _childMap;
         private readonly Trie[] _children;
         private readonly bool _terminal;
@@ -79,8 +82,8 @@ namespace OwaspSanitizerNet.Html
                 _value = elements[pos].Value;
                 if (pos + 1 == end) 
                 {  // base case
-                    _childMap = ZERO_CHARS;
-                    _children = ZERO_TRIES;
+                    _childMap = ZeroChars;
+                    _children = ZeroTries;
                     return;
                 } 
                 else 
@@ -169,9 +172,6 @@ namespace OwaspSanitizerNet.Html
             return new List<KeyValuePair<string, T>>(
                 m.OrderBy(e => e.Key));
         }
-
-        private static readonly char[] ZERO_CHARS = new char[0];
-        private static readonly Trie[] ZERO_TRIES = new Trie[0];
 
         /**
         * Append all strings s such that {@code this.lookup(s).isTerminal()} to the
