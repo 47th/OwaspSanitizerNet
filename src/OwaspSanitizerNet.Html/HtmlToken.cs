@@ -30,24 +30,24 @@ namespace OwaspSanitizerNet.Html
 {
     internal sealed class HtmlToken
     {
-        private readonly int _start;
-        private readonly int _end;
-        private readonly HtmlTokenType _type;
+        public readonly int start;
+        public readonly int end;
+        public readonly HtmlTokenType type;
 
         public static HtmlToken instance(int start, int end, HtmlTokenType type) {
             return new HtmlToken(start, end, type);
         }
 
         public bool tokenInContextMatches(string context, string match) {
-            int n = _end - _start;
+            int n = end - start;
             if (n != match.Length) { return false; }
-            return context.IndexOf(match, _start, n) == _start;
+            return context.IndexOf(match, start, n) == start;
         }
 
         private HtmlToken(int start, int end, HtmlTokenType type) {
-            _start = start;
-            _end = end;
-            _type = type;
+            this.start = start;
+            this.end = end;
+            this.type = type;
         }
     } 
 }
