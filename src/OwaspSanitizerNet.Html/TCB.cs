@@ -39,6 +39,7 @@ namespace OwaspSanitizerNet.Html
         AttributeTargets.Constructor | 
         AttributeTargets.Method | 
         AttributeTargets.Class | 
+        AttributeTargets.Interface | 
         AttributeTargets.Assembly
         )]
     public class TCB : Attribute {
