@@ -2,16 +2,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (console)",
+            "name": "Launch xUnit",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceRoot}/bin/Debug/<target-framework>/<project-name.dll>",
-            "args": [],
+            "program": "/usr/share/dotnet/dotnet",
+            "args": [
+                "test",
+                "${workspaceRoot}/test/OwaspSanitizerNet.Html.Tests"
+            ],
             "cwd": "${workspaceRoot}",
-            "externalConsole": false,
-            "stopAtEntry": false,
-            "internalConsoleOptions": "openOnSessionStart"
+            "externalConsole": false
         },
         {
             "name": ".NET Core Attach",

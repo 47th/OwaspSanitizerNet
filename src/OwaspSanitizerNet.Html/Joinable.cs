@@ -76,7 +76,7 @@ namespace OwaspSanitizerNet.Html
                     unroll(part);
                 }
             }
-            else if (_specialJoinableType.GetTypeInfo().IsAssignableFrom(x.GetType()))
+            else if (_specialJoinableType.GetTypeInfo().IsAssignableFrom(x.GetType().GetTypeInfo()))
             {
                 // We shouldn't implement special joinable for AttributePolicies
                 // without implementing the properly parameterized variant.

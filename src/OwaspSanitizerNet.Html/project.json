@@ -3,12 +3,14 @@
   "buildOptions": {
     "debugType": "portable"
   },
-  "dependencies": {},
+  "dependencies": {
+    "System.Runtime": "4.1.0",
+    "System.Runtime.Extensions": "4.1.0",
+    "System.Collections": "4.0.11",
+    "System.Linq": "4.1.0",
+    "System.Reflection": "4.1.0"
+  },
   "frameworks": {
-    "netstandard1.6": {
-      "dependencies": {
-        "NETStandard.Library": "1.6.0"
-      }
-    }
+    "netstandard1.0": { }
   }
 }
